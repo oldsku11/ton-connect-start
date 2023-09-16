@@ -4,6 +4,9 @@ node_modules/
 # Ignore environment-specific files
 .env
 
+# Ignore the "dist" folder, which typically contains build output.
+dist/
+
 # Ignore any logs or temporary files
 *.log
 npm-debug.log*
