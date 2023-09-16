@@ -18,13 +18,25 @@ bot.onText(/\/connect/, async (msg) => {
     }
   })
 
-  const tonkeeper = wallets.find((wallet) => wallet.name === 'Tonkeeper')!
-
-  const link = connector.connect({
-    bridgeUrl: tonkeeper.bridgeUrl,
-    universalLink: tonkeeper.universalLink,
-  })
+  const link = connector.connect(wallets)
   const image = await QRCode.toBuffer(link)
 
-  await bot.sendPhoto(chatId, image)
+  await bot.sendPhoto(chatId, image, {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: 'Open Wallet',
+            url: `https://ton-connect.github.io/open-tc?connect=${encodeURIComponent(
+              link
+            )}`,
+          },
+          {
+            text: 'Choose a Wallet',
+            callback_data: JSON.stringify({ method: 'chose_wallet' }),
+          },
+        ],
+      ],
+    },
+  })
 })
