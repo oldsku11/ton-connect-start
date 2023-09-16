@@ -5,6 +5,7 @@ import { bot } from './bot'
 import { getWallets } from './ton-connect/wallets'
 import { getConnector } from './ton-connect/connector'
 import QRCode from 'qrcode'
+import './connect-wallet-menu'
 
 bot.onText(/\/connect/, async (msg) => {
   const chatId = msg.chat.id
