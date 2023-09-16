@@ -3,18 +3,14 @@ dotenv.config()
 
 import { bot } from './bot'
 import { getWallets } from './ton-connect/wallets'
-import TonConnect from '@tonconnect/sdk'
-import { TonConnectStorage } from './ton-connect/storage'
+import { getConnector } from './ton-connect/connector'
 import QRCode from 'qrcode'
 
 bot.onText(/\/connect/, async (msg) => {
   const chatId = msg.chat.id
   const wallets = await getWallets()
 
-  const connector = new TonConnect({
-    storage: new TonConnectStorage(chatId),
-    manifestUrl: process.env.MANIFEST_URL,
-  })
+  const connector = getConnector(chatId)
 
   connector.onStatusChange((wallet) => {
     if (wallet) {
