@@ -1,10 +1,10 @@
 import dotenv from 'dotenv'
 dotenv.config()
 
-import { bot } from './bot'
+import { bot, message } from './bot'
 
 bot.on('message', (msg) => {
   const chatId = msg.chat.id
 
-  bot.sendMessage(chatId, 'Received your message')
+  bot.sendMessage(chatId, message)
 })
