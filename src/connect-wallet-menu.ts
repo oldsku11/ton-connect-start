@@ -1,6 +1,9 @@
 import { CallbackQuery } from 'node-telegram-bot-api'
 import { getWallets } from './ton-connect/wallets'
 import { bot } from './bot'
+import QRCode from 'qrcode'
+import TelegramBot from 'node-telegram-bot-api'
+import fs from 'fs'
 
 export const walletMenuCallbacks = {
   chose_wallet: onChooseWalletClick,
@@ -62,4 +65,26 @@ async function onChooseWalletClick(
       chat_id: query.message!.chat.id,
     }
   )
+}
+
+async function editQR(
+  message: TelegramBot.Message,
+  link: string
+): Promise<void> {
+  const fileName = 'QR-code-' + Math.round(Math.random() * 10000000000)
+
+  await QRCode.toFile(`./${fileName}`, link)
+
+  await bot.editMessageMedia(
+    {
+      type: 'photo',
+      media: `attach://${fileName}`,
+    },
+    {
+      message_id: message?.message_id,
+      chat_id: message?.chat.id,
+    }
+  )
+
+  await new Promise((r) => fs.rm(`./${fileName}`, r))
 }
