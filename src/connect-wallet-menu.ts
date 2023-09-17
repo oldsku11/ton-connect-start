@@ -1,5 +1,6 @@
 import { CallbackQuery } from 'node-telegram-bot-api'
 import { getWallets } from './ton-connect/wallets'
+import { getConnector } from './ton-connect/connector'
 import { bot } from './bot'
 import QRCode from 'qrcode'
 import TelegramBot from 'node-telegram-bot-api'
@@ -87,4 +88,47 @@ async function editQR(
   )
 
   await new Promise((r) => fs.rm(`./${fileName}`, r))
+}
+
+async function onOpenUniversalQRClick(
+  query: CallbackQuery,
+  _: string
+): Promise<void> {
+  const chatId = query.message!.chat.id
+  const wallets = await getWallets()
+
+  const connector = getConnector(chatId)
+
+  connector.onStatusChange((wallet) => {
+    if (wallet) {
+      bot.sendMessage(chatId, `${wallet.device.appName} wallet connected!`)
+    }
+  })
+
+  const link = connector.connect(wallets)
+
+  await editQR(query.message!, link)
+
+  await bot.editMessageReplyMarkup(
+    {
+      inline_keyboard: [
+        [
+          {
+            text: 'Open Wallet',
+            url: `https://ton-connect.github.io/open-tc?connect=${encodeURIComponent(
+              link
+            )}`,
+          },
+          {
+            text: 'Choose a Wallet',
+            callback_data: JSON.stringify({ method: 'chose_wallet' }),
+          },
+        ],
+      ],
+    },
+    {
+      message_id: query.message?.message_id,
+      chat_id: query.message?.chat.id,
+    }
+  )
 }
