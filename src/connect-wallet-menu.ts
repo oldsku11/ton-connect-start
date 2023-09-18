@@ -8,6 +8,8 @@ import fs from 'fs'
 
 export const walletMenuCallbacks = {
   chose_wallet: onChooseWalletClick,
+  select_wallet: onWalletClick,
+  universal_qr: onOpenUniversalQRClick,
 }
 
 bot.on('callback_query', (query) => {
@@ -129,6 +131,55 @@ async function onOpenUniversalQRClick(
     {
       message_id: query.message?.message_id,
       chat_id: query.message?.chat.id,
+    }
+  )
+}
+
+async function onWalletClick(
+  query: CallbackQuery,
+  data: string
+): Promise<void> {
+  const chatId = query.message!.chat.id
+  const connector = getConnector(chatId)
+
+  connector.onStatusChange((wallet) => {
+    if (wallet) {
+      bot.sendMessage(chatId, `${wallet.device.appName} wallet connected!`)
+    }
+  })
+
+  const wallets = await getWallets()
+
+  const selectedWallet = wallets.find((wallet) => wallet.name === data)
+  if (!selectedWallet) {
+    return
+  }
+
+  const link = connector.connect({
+    bridgeUrl: selectedWallet.bridgeUrl,
+    universalLink: selectedWallet.universalLink,
+  })
+
+  await editQR(query.message!, link)
+
+  await bot.editMessageReplyMarkup(
+    {
+      inline_keyboard: [
+        [
+          {
+            text: '« Back',
+            callback_data: JSON.stringify({ method: 'chose_wallet' }),
+          },
+          {
+            text: `Open ${data}`,
+            url: link,
+          },
+        ],
+      ],
+    },
+    {
+      message_id: query.message?.message_id,
+      chat_id: chatId,
     }
   )
 }
