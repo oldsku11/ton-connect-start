@@ -3,7 +3,7 @@ dotenv.config()
 
 import { bot } from './bot'
 import './connect-wallet-menu'
-import { handleConnectCommand } from './commands-handlers'
+import { handleConnectCommand, handleSendTXCommand } from './commands-handlers'
 import { walletMenuCallbacks } from './connect-wallet-menu'
 
 const callbacks = {
@@ -31,3 +31,4 @@ bot.on('callback_query', (query) => {
 })
 
 bot.onText(/\/connect/, handleConnectCommand)
+bot.onText(/\/send_tx/, handleSendTXCommand)
