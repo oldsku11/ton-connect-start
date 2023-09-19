@@ -2,42 +2,32 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import { bot } from './bot'
-import { getWallets } from './ton-connect/wallets'
-import { getConnector } from './ton-connect/connector'
-import QRCode from 'qrcode'
 import './connect-wallet-menu'
+import { handleConnectCommand } from './commands-handlers'
+import { walletMenuCallbacks } from './connect-wallet-menu'
 
-bot.onText(/\/connect/, async (msg) => {
-  const chatId = msg.chat.id
-  const wallets = await getWallets()
+const callbacks = {
+  ...walletMenuCallbacks,
+}
 
-  const connector = getConnector(chatId)
+bot.on('callback_query', (query) => {
+  if (!query.data) {
+    return
+  }
 
-  connector.onStatusChange((wallet) => {
-    if (wallet) {
-      bot.sendMessage(chatId, `${wallet.device.appName} wallet connected!`)
-    }
-  })
+  let request: { method: string; data: string }
 
-  const link = connector.connect(wallets)
-  const image = await QRCode.toBuffer(link)
+  try {
+    request = JSON.parse(query.data)
+  } catch {
+    return
+  }
 
-  await bot.sendPhoto(chatId, image, {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: 'Open Wallet',
-            url: `https://ton-connect.github.io/open-tc?connect=${encodeURIComponent(
-              link
-            )}`,
-          },
-          {
-            text: 'Choose a Wallet',
-            callback_data: JSON.stringify({ method: 'chose_wallet' }),
-          },
-        ],
-      ],
-    },
-  })
+  if (!callbacks[request.method as keyof typeof callbacks]) {
+    return
+  }
+
+  callbacks[request.method as keyof typeof callbacks](query, request.data)
 })
+
+bot.onText(/\/connect/, handleConnectCommand)
